@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Milch Experience - Mobile</title>
+    <style>
+        /* Reset styles */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            background-color: black;
+        }
+
+        /* Container for the video player */
+        #playerContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            overflow: hidden;
+        }
+
+        /* Main video element */
+        #video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+            background: black;
+        }
+
+        /* Overlay for play/pause interaction */
+        #frameOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://i.postimg.cc/9MRsCJQ0/image.png') center center no-repeat;
+            background-size: cover;
+            z-index: 2;
+            cursor: pointer;
+        }
+
+        /* Controls container */
+        #controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+        }
+
+        /* Horizontal seek bar */
+        #seekBar {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Custom styles for slider thumb */
+        #seekBar::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+        }
+
+        #seekBar::-moz-range-thumb {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="playerContainer">
+        <!-- Video player -->
+        <video id="video" muted playsinline webkit-playsinline x5-playsinline>
+            <source
+                src="https://link.storjshare.io/s/jwosvpqrycu4sxgihvn65zld4xea/music/video-output-55ABDD3F-533B-4378-ABFF-A76FA4631505.mp4?download=1"
+                type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+
+        <!-- Frame overlay for interaction -->
+        <div id="frameOverlay"></div>
+
+        <!-- Controls with seek bar -->
+        <div id="controls">
+            <input id="seekBar" type="range" min="0" max="100" value="0">
+        </div>
+
+        <!-- Audio player -->
+        <audio id="audio">
+            <source src="https://link.storjshare.io/s/jvvuzllnvz7yqfsylqn5xeknupga/music/f.flac?download=1"
+                type="audio/flac">
+            Your browser does not support the audio tag.
+        </audio>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const video = document.getElementById('video');
+            const audio = document.getElementById('audio');
+            const seekBar = document.getElementById('seekBar');
+            const loopVideoSource = "https://link.storjshare.io/s/jv3aw27ilzf4zak5qoormoksjsza/music/milchloop.MP4?download=1";
+            const introVideoSource = "https://link.storjshare.io/s/jupqhzkurt5ywvgxeco2jjrdhyqq/music/MilchIntro.mp4?download=1";
+            let isPlaying = false;
+            let currentStage = "clickVideo";
+            let audioContext, analyser, frequencyData;
+
+            // Ensure cross-browser inline video
+            video.setAttribute('playsinline', '');
+            video.setAttribute('webkit-playsinline', '');
+            video.setAttribute('x5-playsinline', '');
+
+            // Prevent fullscreen and native controls
+            video.removeAttribute('controls');
+
+            // Prevent touch interactions that might trigger fullscreen
+            document.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+            }, { passive: false });
+
+            // Update seek bar position based on audio progress
+            const updateSeekBar = () => {
+                if (!isNaN(audio.duration)) {
+                    const progress = (audio.currentTime / audio.duration) * 100;
+                    seekBar.value = progress;
+                }
+            };
+
+            // Synchronize video to match audio
+            const syncVideoToAudio = () => {
+                video.currentTime = Math.min(audio.currentTime, video.duration);
+            };
+
+            // Handle user interaction with seek bar
+            seekBar.addEventListener('input', () => {
+                if (!isNaN(audio.duration)) {
+                    const seekToTime = (seekBar.value / 100) * audio.duration;
+                    audio.currentTime = seekToTime;
+                    video.currentTime = seekToTime;
+
+                    // Reset to click/play video and fade into loop video
+                    currentStage = "clickVideo";
+                    video.src = "https://link.storjshare.io/s/jwosvpqrycu4sxgihvn65zld4xea/music/video-output-55ABDD3F-533B-4378-ABFF-A76FA4631505.mp4?download=1";
+                    video.play();
+                    setTimeout(() => {
+                        currentStage = "introVideo";
+                        video.src = introVideoSource;
+                        video.play();
+                    }, 1000);
+                }
+            });
+
+            // Toggle play/pause functionality
+            const togglePlayPause = () => {
+                if (isPlaying) {
+                    video.pause();
+                    audio.pause();
+                } else {
+                    video.play();
+                    if (audio.paused) {
+                        audio.play();
+                    }
+                }
+                isPlaying = !isPlaying;
+            };
+
+            // Transition through playback stages
+            video.addEventListener('ended', () => {
+                if (currentStage === "clickVideo") {
+                    currentStage = "introVideo";
+                    video.src = introVideoSource;
+                    video.play();
+                } else if (currentStage === "introVideo") {
+                    currentStage = "loopVideo";
+                    video.src = loopVideoSource;
+                    video.loop = true;
+                    video.play();
+                }
+            });
+
+            // Set up audio analysis
+            function setupAudioAnalysis() {
+                audioContext = new AudioContext();
+                const source = audioContext.createMediaElementSource(audio);
+                analyser = audioContext.createAnalyser();
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+                analyser.fftSize = 256;
+                frequencyData = new Uint8Array(analyser.frequencyBinCount);
+            }
+
+            // Detect beats and apply visual effects
+            function detectBeats() {
+                analyser.getByteFrequencyData(frequencyData);
+                const sum = frequencyData.reduce((a, b) => a + b, 0);
+                const avg = sum / frequencyData.length;
+                const threshold = 100; // Adjust this value to fine-tune beat detection
+
+                if (avg > threshold) {
+                    video.style.transform = 'scale(1.05)';
+                    setTimeout(() => {
+                        video.style.transform = 'scale(1)';
+                    }, 100);
+                }
+            }
+
+            // Update seek bar and sync video while audio plays
+            audio.addEventListener('timeupdate', () => {
+                updateSeekBar();
+                syncVideoToAudio();
+                detectBeats();
+            });
+
+            // Set up audio analysis when audio starts playing
+            audio.addEventListener('play', () => {
+                if (!audioContext) {
+                    setupAudioAnalysis();
+                }
+            });
+
+            // Attach toggle play/pause functionality to overlay
+            document.getElementById('frameOverlay').addEventListener('click', togglePlayPause);
+        });
+    </script>
+</body>
+
+</html>
