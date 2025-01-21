@@ -85,8 +85,7 @@
 
 <body>
     <video id="backgroundVideo" muted>
-        <source src="https://link.storjshare.io/s/jupqhzkurt5ywvgxeco2jjrdhyqq/music/MilchIntro.mp4?download=1"
-            type="video/mp4">
+        <source src="https://link.storjshare.io/s/jupqhzkurt5ywvgxeco2jjrdhyqq/music/MilchIntro.mp4?download=1" type="video/mp4">
         Your browser does not support the video tag.
     </video>
 
@@ -94,17 +93,14 @@
 
     <div id="clickableVideoContainer">
         <video id="clickableVideo" muted>
-            <source
-                src="https://link.storjshare.io/s/jwosvpqrycu4sxgihvn65zld4xea/music/video-output-55ABDD3F-533B-4378-ABFF-A76FA4631505.mp4?download=1"
-                type="video/mp4">
+            <source src="https://link.storjshare.io/s/jwosvpqrycu4sxgihvn65zld4xea/music/video-output-55ABDD3F-533B-4378-ABFF-A76FA4631505.mp4?download=1" type="video/mp4">
             Your browser does not support the video tag.
         </video>
         <img id="frameOverlay" src="https://i.postimg.cc/9MRsCJQ0/image.png" alt="Frame Overlay">
     </div>
 
-    <audio id="audioPlayer" autoplay>
-        <source src="https://link.storjshare.io/s/jvvuzllnvz7yqfsylqn5xeknupga/music/f.flac?download=1"
-            type="audio/flac">
+    <audio id="audioPlayer">
+        <source src="https://link.storjshare.io/s/jvvuzllnvz7yqfsylqn5xeknupga/music/f.flac?download=1" type="audio/flac">
         Your browser does not support the audio tag.
     </audio>
 
@@ -125,8 +121,8 @@
 
             // Ensure overlay matches the video size
             clickableVideo.addEventListener('loadedmetadata', () => {
-                frameOverlay.style.height = `${ clickableVideo.offsetHeight }px`;
-                frameOverlay.style.width = `${ clickableVideo.offsetWidth }px`;
+                frameOverlay.style.height = `${clickableVideo.offsetHeight}px`;
+                frameOverlay.style.width = `${clickableVideo.offsetWidth}px`;
             });
 
             function togglePlayPause() {
@@ -137,11 +133,9 @@
                     clickableVideo.style.opacity = "1";
                 } else {
                     video.play();
+                    audio.play();
                     clickableVideo.play();
                     clickableVideo.style.opacity = "1";
-                    if (audio.paused) {
-                        audio.play();
-                    }
                 }
                 isPlaying = !isPlaying;
             }
@@ -160,63 +154,15 @@
                 clickableVideo.style.opacity = "0.2";
             });
 
-            let audioContext, analyser, frequencyData;
-
-            // Set up audio analysis
-            function setupAudioAnalysis() {
-                audioContext = new AudioContext();
-                const source = audioContext.createMediaElementSource(audio);
-                analyser = audioContext.createAnalyser();
-                source.connect(analyser);
-                analyser.connect(audioContext.destination);
-                analyser.fftSize = 256;
-                frequencyData = new Uint8Array(analyser.frequencyBinCount);
-            }
-
-            // Detect beats and apply visual effects
-            function detectBeats() {
-                analyser.getByteFrequencyData(frequencyData);
-                const sum = frequencyData.reduce((a, b) => a + b, 0);
-                const avg = sum / frequencyData.length;
-                const threshold = 100; // Adjust this value to fine-tune beat detection
-
-                if (avg > threshold) {
-                    video.style.transform = 'scale(1.05)';
-                    clickableVideo.style.transform = 'scale(1.05)';
-                    setTimeout(() => {
-                        video.style.transform = 'scale(1)';
-                        clickableVideo.style.transform = 'scale(1)';
-                    }, 100);
-                }
-            }
-
             audio.addEventListener('timeupdate', () => {
                 seekBar.value = (audio.currentTime / audio.duration) * 100;
-                detectBeats();
             });
 
             seekBar.addEventListener('input', () => {
-                if (!isNaN(audio.duration)) {
-                    const seekToTime = (seekBar.value / 100) * audio.duration;
-                    audio.currentTime = seekToTime;
-                    video.currentTime = seekToTime;
-
-                    // Reset to intro video and fade into loop video
-                    video.src = "https://link.storjshare.io/s/jupqhzkurt5ywvgxeco2jjrdhyqq/music/MilchIntro.mp4?download=1";
-                    video.play();
-                    setTimeout(() => {
-                        video.src = loopVideoSource;
-                        video.loop = true;
-                        video.play();
-                    }, video.duration * 1000);
-                }
-            });
-
-            // Set up audio analysis when audio starts playing
-            audio.addEventListener('play', () => {
-                if (!audioContext) {
-                    setupAudioAnalysis();
-                }
+                const seekToTime = (seekBar.value / 100) * audio.duration;
+                audio.currentTime = seekToTime;
+                video.currentTime = seekToTime;
+                clickableVideo.currentTime = seekToTime;
             });
         });
     </script>
