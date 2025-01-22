@@ -57,11 +57,6 @@
             top: 0;
             left: 0;
             object-fit: cover;
-            display: none;
-        }
-
-        .square.expanded video {
-            display: block;
         }
 
         #seekBar {
@@ -276,6 +271,19 @@
 
             // Attach the tap handler to each square
             squares.forEach(sq => {
+                // Ensure each intro video is paused at first frame on load
+                const intro = sq.querySelector("video:first-of-type");
+                const loop = sq.querySelector("video:last-of-type");
+                intro.pause();
+                intro.currentTime = 0;
+                intro.load();     // Ensures the first frame is visible
+                // Keep intro muted so it can auto-play with user tap
+                intro.muted = true;
+
+                loop.pause();
+                loop.currentTime = 0;
+                loop.load();
+
                 sq.addEventListener('click', () => onSquareTap(sq));
                 setSquareState(sq, 0);
             });
