@@ -14,7 +14,6 @@
             background-color: black;
         }
 
-        /* Neues Pulsieren des Rahmens (rosa-weiß) */
         @keyframes pulseBorder {
             0% {
                 box-shadow: 0 0 0 0 rgba(255, 192, 203, 0.7);
@@ -29,31 +28,70 @@
             }
         }
 
-        /* Grundzustand: sanft pulsierender Rahmen */
-        .pulsing-border {
-            border: 2px solid #ffe4ea;
+        @keyframes fadeInPlayIcon {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes pulsePlayIcon {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .square {
+            position: relative;
+            background: url("https://i.postimg.cc/HsmQjtxK/image-21.png") center center no-repeat;
+            background-size: cover;
+            transition: transform 0.3s ease;
+            overflow: hidden;
+            border: 2px solid rgba(255, 228, 234, 0.7);
             animation: pulseBorder 3s infinite;
         }
 
-        /* Intensivere Variante nach erstem Tap */
-        .pulsing-border-strong {
-            animation: pulseBorder 1.6s infinite;
-            border: 3px solid #ffd2e1;
+        .square.tapped {
+            transform: scale(1.04);
+            border: 2px solid rgba(255, 192, 203, 0.9);
+            animation: pulseBorder 1.5s infinite;
         }
 
-        /* Eingeblendetes Play-Symbol nach Intro-Ende */
-        .play-overlay {
+        .square.expanded {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 999;
+        }
+
+        .play-icon {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 80px;
-            height: 80px;
-            margin: -40px 0 0 -40px;
-            /* zentrieren */
-            background: url("https://i.postimg.cc/BQ6qhCDP/play-milch.png") no-repeat center/contain;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: url("https://i.postimg.cc/BQ6qhCDP/play-milch.png") center/contain no-repeat;
             opacity: 0;
-            animation: fadePulse 2s infinite alternate;
             pointer-events: none;
+            z-index: 2;
+        }
+
+        .play-icon.visible {
+            animation: fadeInPlayIcon 1s forwards, pulsePlayIcon 2s infinite;
         }
 
         #playerContainer {
@@ -62,99 +100,47 @@
             grid-template-rows: 1fr 1fr;
             width: 100%;
             height: 100%;
-            position: relative;
-        }
-
-        .square {
-            position: relative;
-            background: url("https://i.postimg.cc/9MRsCJQ0/image.png") center center no-repeat;
-            background-size: cover;
-            transition: transform 0.3s ease, z-index 0.3s ease;
-            overflow: hidden;
-        }
-
-        .square.tapped {
-            transform: scale(1.04);
-            z-index: 2;
-        }
-
-        .square.expanded {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            transform: none;
-            z-index: 999;
-        }
-
-        .square.expanded~.square {
-            z-index: 1;
-        }
-
-        .square video {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            object-fit: cover;
-            /* Intro & Loop-Videos stehen bereit */
-        }
-
-        #seekBar {
-            display: none;
-            width: 80%;
-            margin: 0 auto;
-            position: absolute;
-            left: 10%;
-            bottom: 10px;
-            height: 35px;
-            /* größere Höhe für leichtere Bedienung */
-            z-index: 9999;
-        }
-
-        .square.expanded.playing~#seekBar {
-            display: block;
+            gap: 4px;
         }
 
         #controls {
             position: fixed;
-            bottom: 0;
+            bottom: 20px;
             left: 0;
             width: 100%;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
             background: rgba(0, 0, 0, 0.6);
-            padding: 10px;
-            z-index: 3;
+            padding: 20px 0;
+            z-index: 1000;
+        }
+
+        #playPauseBtn {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 15px;
+            background: url("https://i.postimg.cc/BQ6qhCDP/play-milch.png") center/contain no-repeat;
+            border: none;
+            cursor: pointer;
+        }
+
+        #seekBar {
+            width: 80%;
+            height: 20px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
         }
 
         #seekBar::-webkit-slider-thumb {
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
+            -webkit-appearance: none;
+            width: 30px;
+            height: 30px;
             background: white;
+            border-radius: 50%;
             cursor: pointer;
         }
-
-        /* Play/Pause-Button oben drüber */
-        #playPauseBtn {
-            position: absolute;
-            bottom: 55px;
-            left: 50%;
-            width: 60px;
-            height: 60px;
-            margin-left: -30px;
-            background: url("play-icon.png") no-repeat center/contain;
-            /* Platzhalter-Icon */
-            z-index: 9999;
-            cursor: pointer;
-        }
-
-        /* Im Pausen-Zustand austauschen:
-           #playPauseBtn.pause { background: url("pause-icon.png") center/contain; }
-        */
     </style>
 </head>
 
@@ -164,201 +150,135 @@
             <video id="intro1" playsinline
                 src="https://link.storjshare.io/s/jvsf3jhukg6dbgqlq5e6qauwchbq/music/video-output-55ABDD3F-533B-4378-ABFF-A76FA4631505.mp4?download=1"></video>
             <video id="loop1" playsinline loop muted
-                src="https://link.storjshare.io/s/jvjwzyepdwe2xfuolfdq2kqdcp7a/music/milchloop.MP4?download=1"></video>
+                src="https://link.storjshare.io/s/jufm4ywhmejpruvhbedgoawdc5ia/music/milchloopintromusic.mp4"></video>
         </div>
         <div class="square" data-squareid="2">
             <video id="intro2" playsinline
                 src="https://link.storjshare.io/s/jvsf3jhukg6dbgqlq5e6qauwchbq/music/video-output-55ABDD3F-533B-4378-ABFF-A76FA4631505.mp4?download=1"></video>
             <video id="loop2" playsinline loop muted
-                src="https://link.storjshare.io/s/jvjwzyepdwe2xfuolfdq2kqdcp7a/music/milchloop.MP4?download=1"></video>
+                src="https://link.storjshare.io/s/jufm4ywhmejpruvhbedgoawdc5ia/music/milchloopintromusic.mp4"></video>
         </div>
         <div class="square" data-squareid="3">
             <video id="intro3" playsinline
                 src="https://link.storjshare.io/s/jvsf3jhukg6dbgqlq5e6qauwchbq/music/video-output-55ABDD3F-533B-4378-ABFF-A76FA4631505.mp4?download=1"></video>
             <video id="loop3" playsinline loop muted
-                src="https://link.storjshare.io/s/jvjwzyepdwe2xfuolfdq2kqdcp7a/music/milchloop.MP4?download=1"></video>
+                src="https://link.storjshare.io/s/jufm4ywhmejpruvhbedgoawdc5ia/music/milchloopintromusic.mp4"></video>
         </div>
         <div class="square" data-squareid="4">
             <video id="intro4" playsinline
                 src="https://link.storjshare.io/s/jvsf3jhukg6dbgqlq5e6qauwchbq/music/video-output-55ABDD3F-533B-4378-ABFF-A76FA4631505.mp4?download=1"></video>
             <video id="loop4" playsinline loop muted
-                src="https://link.storjshare.io/s/jvjwzyepdwe2xfuolfdq2kqdcp7a/music/milchloop.MP4?download=1"></video>
+                src="https://link.storjshare.io/s/jufm4ywhmejpruvhbedgoawdc5ia/music/milchloopintromusic.mp4"></video>
         </div>
-
-        <div id="controls">
-            <input id="seekBar" type="range" min="0" max="100" value="0">
-        </div>
-
-        <audio id="audio">
-            <source src="https://link.storjshare.io/s/jvvuzllnvz7yqfsylqn5xeknupga/music/f.flac?download=1"
-                type="audio/flac">
-            Your browser does not support the audio tag.
-        </audio>
     </div>
+
+    <div id="controls" style="display: none;">
+        <button id="playPauseBtn"></button>
+        <input type="range" id="seekBar" min="0" max="100" value="0">
+    </div>
+
+    <audio id="audio">
+        <source src="https://link.storjshare.io/s/jvvuzllnvz7yqfsylqn5xeknupga/music/f.flac?download=1"
+            type="audio/flac">
+        Your browser does not support the audio tag.
+    </audio>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const squares = document.querySelectorAll('.square');
-            const audio = document.getElementById('audio');
+            const controls = document.getElementById('controls');
+            const playPauseBtn = document.getElementById('playPauseBtn');
             const seekBar = document.getElementById('seekBar');
-
-            // Neuer Button (im DOM anlegen)
-            const playPauseBtn = document.createElement('div');
-            playPauseBtn.id = 'playPauseBtn';
-            playPauseBtn.style.display = 'none';
-            document.body.appendChild(playPauseBtn);
-
-            // We'll track a 'state' per square:
-            //  0 => initial (frame image only)
-            //  1 => intro displayed behind frame (playing in loop)
-            //  2 => loop video + music in full page
-            // We'll also track lastTap to detect double taps
-
-            function getSquareState(sq) {
-                return parseInt(sq.dataset.state || "0", 10);
-            }
-            function setSquareState(sq, st) {
-                sq.dataset.state = st;
-            }
-
             let currentSquare = null;
-            let isIntroPlaying = false;
+            let lastTapTime = 0;
 
-            function resetSquareVideos(sq) {
-                const intro = sq.querySelector('video:first-of-type');
-                const loop = sq.querySelector('video:last-of-type');
-                const overlay = sq.querySelector('.play-overlay');
-                if (overlay) overlay.style.opacity = '0';
-
-                intro.pause();
-                intro.currentTime = 0;
-                loop.pause();
-                loop.currentTime = 0;
-                sq.classList.remove('playing');
-                setSquareState(sq, 0);
-                intro.style.opacity = '1';
-                loop.style.opacity = '0';
+            function createPlayIcon(square) {
+                const icon = document.createElement('div');
+                icon.className = 'play-icon';
+                square.appendChild(icon);
+                return icon;
             }
 
-            function playIntroThenLoop(sq) {
-                const intro = sq.querySelector('video:first-of-type');
-                const loop = sq.querySelector('video:last-of-type');
+            squares.forEach(square => {
+                const introVideo = square.querySelector('video:first-of-type');
+                const loopVideo = square.querySelector('video:last-of-type');
+                const playIcon = createPlayIcon(square);
 
-                isIntroPlaying = true;
-                audio.play();
-                intro.play();
+                introVideo.addEventListener('ended', () => {
+                    playIcon.classList.add('visible');
+                });
 
-                // Because user wants the intro in a loop behind frame image:
-                intro.loop = true;
-            }
+                square.addEventListener('click', (e) => {
+                    const now = Date.now();
+                    const timeSinceLastTap = now - lastTapTime;
+                    lastTapTime = now;
 
-            function switchToLoop(sq) {
-                const intro = sq.querySelector('video:first-of-type');
-                const loop = sq.querySelector('video:last-of-type');
-                intro.style.opacity = '0';
-                loop.style.opacity = '1';
-                loop.play();
-                audio.play();
-                isIntroPlaying = false;
-            }
-
-            function syncMedia() {
-                const duration = audio.duration;
-                if (!duration) return;
-                const currentTime = audio.currentTime;
-                seekBar.value = (currentTime / duration) * 100;
-            }
-
-            // We'll detect double taps by timing consecutive taps
-            function onSquareTap(sq) {
-                const now = Date.now();
-                const lastTap = parseInt(sq.dataset.lastTap || "0", 10);
-                sq.dataset.lastTap = now.toString();
-                const gap = now - lastTap;
-
-                if (gap < 300) {
-                    // Double tap => reset
-                    resetSquareVideos(sq);
-                    sq.classList.remove('tapped', 'expanded', 'playing');
-                    audio.pause();
-                    audio.currentTime = 0;
-                    return;
-                }
-
-                const state = getSquareState(sq);
-                const intro = sq.querySelector('video:first-of-type');
-                const loop = sq.querySelector('video:last-of-type');
-
-                // If we're in initial state => 0 => play intro behind frame image
-                if (state === 0) {
-                    squares.forEach(other => {
-                        if (other !== sq) {
-                            resetSquareVideos(other);
-                            other.classList.remove('tapped', 'expanded', 'playing');
-                        }
-                    });
-                    sq.classList.add('tapped'); // small scale
-                    setSquareState(sq, 1);
-                    intro.style.opacity = '1';  // behind frame
-                    loop.style.opacity = '0';
-                    playIntroThenLoop(sq);
-                    return;
-                }
-
-                // If we're in state 1 => switch to loop
-                if (state === 1) {
-                    squares.forEach(other => {
-                        if (other !== sq) {
-                            resetSquareVideos(other);
-                            other.classList.remove('tapped', 'expanded', 'playing');
-                        }
-                    });
-                    // Expand to edges
-                    sq.classList.add('expanded', 'playing');
-                    currentSquare = sq;
-                    setSquareState(sq, 2);
-                    switchToLoop(sq);
-                    return;
-                }
-
-                // If in state 2 => single tap toggles play/pause of loop + audio
-                if (state === 2) {
-                    if (audio.paused) {
-                        audio.play();
-                        loop.play();
-                    } else {
-                        audio.pause();
-                        loop.pause();
+                    if (timeSinceLastTap < 300) {
+                        // Double tap - reset to homepage
+                        resetAll();
+                        return;
                     }
-                }
-            }
+
+                    if (!square.classList.contains('tapped')) {
+                        // First tap
+                        resetAll();
+                        square.classList.add('tapped');
+                        introVideo.play();
+                    } else if (!square.classList.contains('expanded')) {
+                        // Second tap
+                        square.classList.add('expanded');
+                        loopVideo.play();
+                        controls.style.display = 'flex';
+                        currentSquare = square;
+                    } else {
+                        // Toggle play/pause when expanded
+                        if (loopVideo.paused) {
+                            loopVideo.play();
+                            playPauseBtn.style.backgroundImage = 'url("https://i.postimg.cc/BQ6qhCDP/play-milch.png")';
+                        } else {
+                            loopVideo.pause();
+                            playPauseBtn.style.backgroundImage = 'url("https://i.postimg.cc/BQ6qhCDP/play-milch.png")';
+                        }
+                    }
+                });
+
+                loopVideo.addEventListener('timeupdate', () => {
+                    if (currentSquare === square) {
+                        seekBar.value = (loopVideo.currentTime / loopVideo.duration) * 100;
+                    }
+                });
+
+                loopVideo.addEventListener('ended', () => {
+                    resetAll();
+                });
+            });
 
             seekBar.addEventListener('input', () => {
-                const seekTime = (seekBar.value / 100) * audio.duration;
-                audio.currentTime = seekTime;
-                syncMedia();
+                if (currentSquare) {
+                    const loopVideo = currentSquare.querySelector('video:last-of-type');
+                    const time = (seekBar.value / 100) * loopVideo.duration;
+                    loopVideo.currentTime = time;
+                }
             });
 
-            audio.addEventListener('timeupdate', syncMedia);
+            function resetAll() {
+                squares.forEach(square => {
+                    const introVideo = square.querySelector('video:first-of-type');
+                    const loopVideo = square.querySelector('video:last-of-type');
+                    const playIcon = square.querySelector('.play-icon');
 
-            // Attach the tap handler to each square
-            squares.forEach(sq => {
-                // Ensure each intro video is paused at first frame on load
-                const intro = sq.querySelector("video:first-of-type");
-                const loop = sq.querySelector("video:last-of-type");
-                intro.pause();
-                intro.currentTime = 0;
-                intro.load();     // Ensures the first frame is visible
-                // Keep intro muted so it can auto-play with user tap
-                intro.muted = true;
+                    introVideo.pause();
+                    introVideo.currentTime = 0;
+                    loopVideo.pause();
+                    loopVideo.currentTime = 0;
 
-                loop.pause();
-                loop.currentTime = 0;
-                loop.load();
+                    square.classList.remove('tapped', 'expanded');
+                    if (playIcon) playIcon.classList.remove('visible');
+                });
 
-                sq.addEventListener('click', () => onSquareTap(sq));
-                setSquareState(sq, 0);
-            });
+                controls.style.display = 'none';
+                currentSquare = null;
+            }
         });
     </script>
 </body>
