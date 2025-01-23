@@ -1,284 +1,232 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Milch Experience - Mobile</title>
+    <title>Milch Experience Mobile</title>
     <style>
         body,
         html {
             margin: 0;
             padding: 0;
             height: 100%;
-            background-color: black;
-        }
-
-        @keyframes pulseBorder {
-            0% {
-                box-shadow: 0 0 0 0 rgba(255, 192, 203, 0.7);
-            }
-
-            50% {
-                box-shadow: 0 0 10px 6px rgba(255, 192, 203, 0.9);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(255, 192, 203, 0.7);
-            }
-        }
-
-        @keyframes fadeInPlayIcon {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 0.5;
-            }
-        }
-
-        @keyframes pulsePlayIcon {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.1);
-            }
-
-            100% {
-                transform: scale(1);
-            }
-        }
-
-        .square {
-            position: relative;
-            background: url("https://i.postimg.cc/HsmQjtxK/image-21.png") center center no-repeat;
-            background-size: cover;
-            transition: transform 0.3s ease;
+            background: #000;
+            font-family: Arial, sans-serif;
             overflow: hidden;
-            border: 2px solid rgba(255, 228, 234, 0.7);
-            animation: pulseBorder 3s infinite;
         }
 
-        .square.tapped {
-            transform: scale(1.04);
-            border: 2px solid rgba(255, 192, 203, 0.9);
-            animation: pulseBorder 1.5s infinite;
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding: 10px;
+            height: 100vh;
+            box-sizing: border-box;
         }
 
-        .square.expanded {
-            position: fixed;
+        .video-square {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%;
+            overflow: hidden;
+        }
+
+        .video-container {
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 999;
+            transform: scale(1);
+            transition: transform 0.3s ease;
         }
 
-        .play-icon {
+        .video-element {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 60px;
-            height: 60px;
-            background: url("https://i.postimg.cc/BQ6qhCDP/play-milch.png") center/contain no-repeat;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 2;
-        }
-
-        .play-icon.visible {
-            animation: fadeInPlayIcon 1s forwards, pulsePlayIcon 2s infinite;
-        }
-
-        #playerContainer {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
             width: 100%;
             height: 100%;
-            gap: 4px;
+            object-fit: cover;
         }
 
-        #controls {
-            position: fixed;
-            bottom: 20px;
+        .frame-overlay {
+            position: absolute;
+            top: 0;
             left: 0;
             width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 20px 0;
-            z-index: 1000;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+            transform: scale(1);
+            transition: transform 0.3s ease;
         }
 
-        #playPauseBtn {
-            width: 50px;
-            height: 50px;
-            margin-bottom: 15px;
-            background: url("https://i.postimg.cc/BQ6qhCDP/play-milch.png") center/contain no-repeat;
-            border: none;
-            cursor: pointer;
+        @keyframes pulseBorder {
+
+            0%,
+            50%,
+            100% {
+                border-width: 2px;
+            }
+        }
+
+        .video-square:nth-child(1) {
+            border: 2px solid #ff69b4;
+        }
+
+        .video-square:nth-child(2) {
+            border: 2px solid #800080;
+        }
+
+        .video-square:nth-child(3) {
+            border: 2px solid #40E0D0;
+        }
+
+        .video-square:nth-child(4) {
+            border: 2px solid #ffffff;
+        }
+
+        .video-square {
+            animation: pulseBorder 2s infinite;
+        }
+
+        .video-square.active {
+            animation: pulseBorder 1s infinite;
+        }
+
+        .active .video-container,
+        .active .frame-overlay {
+            transform: scale(1.05);
+        }
+
+        /* Add seekbar styles */
+        .seek-controls {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
         }
 
         #seekBar {
-            width: 80%;
+            width: 100%;
             height: 20px;
-            -webkit-appearance: none;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-        }
-
-        #seekBar::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 30px;
-            height: 30px;
-            background: white;
-            border-radius: 50%;
-            cursor: pointer;
         }
     </style>
 </head>
 
 <body>
-    <div id="playerContainer">
-        <div class="square" data-squareid="1">
-            <video id="intro1" playsinline
-                src="https://link.storjshare.io/s/jvsf3jhukg6dbgqlq5e6qauwchbq/music/video-output-55ABDD3F-533B-4378-ABFF-A76FA4631505.mp4?download=1"></video>
-            <video id="loop1" playsinline loop muted
-                src="https://link.storjshare.io/s/jufm4ywhmejpruvhbedgoawdc5ia/music/milchloopintromusic.mp4"></video>
+    <div class="grid-container">
+        <div class="video-square" data-color="#ff69b4">
+            <div class="video-container">
+                <video class="video-element" playsinline>
+                    <source
+                        src="https://link.storjshare.io/s/jx4jfvwuvo2mcvdebhboffxnelzq/music/milchloopintromusic.mp4?download=1"
+                        type="video/mp4">
+                </video>
+                <img class="frame-overlay" src="https://i.postimg.cc/MKTbyvh8/58112120103.png" alt="Frame">
+            </div>
         </div>
-        <div class="square" data-squareid="2">
-            <video id="intro2" playsinline
-                src="https://link.storjshare.io/s/jvsf3jhukg6dbgqlq5e6qauwchbq/music/video-output-55ABDD3F-533B-4378-ABFF-A76FA4631505.mp4?download=1"></video>
-            <video id="loop2" playsinline loop muted
-                src="https://link.storjshare.io/s/jufm4ywhmejpruvhbedgoawdc5ia/music/milchloopintromusic.mp4"></video>
+        <!-- Repeat for other squares -->
+        <div class="video-square" data-color="#800080">
+            <div class="video-container">
+                <video class="video-element" playsinline>
+                    <source
+                        src="https://link.storjshare.io/s/jx4jfvwuvo2mcvdebhboffxnelzq/music/milchloopintromusic.mp4?download=1"
+                        type="video/mp4">
+                </video>
+                <img class="frame-overlay" src="https://i.postimg.cc/MKTbyvh8/58112120103.png" alt="Frame">
+            </div>
         </div>
-        <div class="square" data-squareid="3">
-            <video id="intro3" playsinline
-                src="https://link.storjshare.io/s/jvsf3jhukg6dbgqlq5e6qauwchbq/music/video-output-55ABDD3F-533B-4378-ABFF-A76FA4631505.mp4?download=1"></video>
-            <video id="loop3" playsinline loop muted
-                src="https://link.storjshare.io/s/jufm4ywhmejpruvhbedgoawdc5ia/music/milchloopintromusic.mp4"></video>
+        <div class="video-square" data-color="#40E0D0">
+            <div class="video-container">
+                <video class="video-element" playsinline>
+                    <source
+                        src="https://link.storjshare.io/s/jx4jfvwuvo2mcvdebhboffxnelzq/music/milchloopintromusic.mp4?download=1"
+                        type="video/mp4">
+                </video>
+                <img class="frame-overlay" src="https://i.postimg.cc/9MRsCJQ0/image.png" alt="Frame">
+            </div>
         </div>
-        <div class="square" data-squareid="4">
-            <video id="intro4" playsinline
-                src="https://link.storjshare.io/s/jvsf3jhukg6dbgqlq5e6qauwchbq/music/video-output-55ABDD3F-533B-4378-ABFF-A76FA4631505.mp4?download=1"></video>
-            <video id="loop4" playsinline loop muted
-                src="https://link.storjshare.io/s/jufm4ywhmejpruvhbedgoawdc5ia/music/milchloopintromusic.mp4"></video>
+        <div class="video-square" data-color="#ffffff">
+            <div class="video-container">
+                <video class="video-element" playsinline>
+                    <source
+                        src="https://link.storjshare.io/s/jx4jfvwuvo2mcvdebhboffxnelzq/music/milchloopintromusic.mp4?download=1"
+                        type="video/mp4">
+                </video>
+                <img class="frame-overlay" src="https://i.postimg.cc/9MRsCJQ0/image.png" alt="Frame">
+            </div>
         </div>
     </div>
 
-    <div id="controls" style="display: none;">
-        <button id="playPauseBtn"></button>
-        <input type="range" id="seekBar" min="0" max="100" value="0">
+    <div class="seek-controls">
+        <input id="seekBar" type="range" min="0" max="100" value="0">
     </div>
-
-    <audio id="audio">
-        <source src="https://link.storjshare.io/s/jvvuzllnvz7yqfsylqn5xeknupga/music/f.flac?download=1"
-            type="audio/flac">
-        Your browser does not support the audio tag.
-    </audio>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const squares = document.querySelectorAll('.square');
-            const controls = document.getElementById('controls');
-            const playPauseBtn = document.getElementById('playPauseBtn');
+            const squares = document.querySelectorAll('.video-square');
             const seekBar = document.getElementById('seekBar');
-            let currentSquare = null;
-            let lastTapTime = 0;
-
-            function createPlayIcon(square) {
-                const icon = document.createElement('div');
-                icon.className = 'play-icon';
-                square.appendChild(icon);
-                return icon;
-            }
+            let activeVideo = null;
 
             squares.forEach(square => {
-                const introVideo = square.querySelector('video:first-of-type');
-                const loopVideo = square.querySelector('video:last-of-type');
-                const playIcon = createPlayIcon(square);
+                const video = square.querySelector('video');
 
-                introVideo.addEventListener('ended', () => {
-                    playIcon.classList.add('visible');
-                });
+                // Load the first frame
+                video.load();
+                video.currentTime = 0;
+                video.muted = true;
 
-                square.addEventListener('click', (e) => {
-                    const now = Date.now();
-                    const timeSinceLastTap = now - lastTapTime;
-                    lastTapTime = now;
+                square.addEventListener('click', () => {
+                    const isActive = square.classList.contains('active');
 
-                    if (timeSinceLastTap < 300) {
-                        // Double tap - reset to homepage
-                        resetAll();
-                        return;
-                    }
-
-                    if (!square.classList.contains('tapped')) {
+                    if (!isActive) {
                         // First tap
-                        resetAll();
-                        square.classList.add('tapped');
-                        introVideo.play();
-                    } else if (!square.classList.contains('expanded')) {
-                        // Second tap
-                        square.classList.add('expanded');
-                        loopVideo.play();
-                        controls.style.display = 'flex';
-                        currentSquare = square;
-                    } else {
-                        // Toggle play/pause when expanded
-                        if (loopVideo.paused) {
-                            loopVideo.play();
-                            playPauseBtn.style.backgroundImage = 'url("https://i.postimg.cc/BQ6qhCDP/play-milch.png")';
-                        } else {
-                            loopVideo.pause();
-                            playPauseBtn.style.backgroundImage = 'url("https://i.postimg.cc/BQ6qhCDP/play-milch.png")';
+                        // Deactivate any currently playing video
+                        if (activeVideo) {
+                            activeVideo.parentElement.parentElement.classList.remove('active');
+                            activeVideo.pause();
+                            activeVideo.currentTime = 0;
+                            activeVideo.muted = true;
                         }
-                    }
-                });
 
-                loopVideo.addEventListener('timeupdate', () => {
-                    if (currentSquare === square) {
-                        seekBar.value = (loopVideo.currentTime / loopVideo.duration) * 100;
-                    }
-                });
+                        square.classList.add('active');
+                        video.muted = false;
+                        video.play();
+                        video.loop = true;
+                        activeVideo = video;
 
-                loopVideo.addEventListener('ended', () => {
-                    resetAll();
+                        // Update seekbar as video plays
+                        video.addEventListener('timeupdate', () => {
+                            if (video === activeVideo) {
+                                seekBar.value = (video.currentTime / video.duration) * 100;
+                            }
+                        });
+                    } else {
+                        // Second tap
+                        square.classList.remove('active');
+                        video.pause();
+                        video.currentTime = 0;
+                        video.muted = true;
+                        activeVideo = null;
+                    }
                 });
             });
 
+            // Seekbar control
             seekBar.addEventListener('input', () => {
-                if (currentSquare) {
-                    const loopVideo = currentSquare.querySelector('video:last-of-type');
-                    const time = (seekBar.value / 100) * loopVideo.duration;
-                    loopVideo.currentTime = time;
+                if (activeVideo) {
+                    const time = (seekBar.value / 100) * activeVideo.duration;
+                    activeVideo.currentTime = time;
                 }
             });
-
-            function resetAll() {
-                squares.forEach(square => {
-                    const introVideo = square.querySelector('video:first-of-type');
-                    const loopVideo = square.querySelector('video:last-of-type');
-                    const playIcon = square.querySelector('.play-icon');
-
-                    introVideo.pause();
-                    introVideo.currentTime = 0;
-                    loopVideo.pause();
-                    loopVideo.currentTime = 0;
-
-                    square.classList.remove('tapped', 'expanded');
-                    if (playIcon) playIcon.classList.remove('visible');
-                });
-
-                controls.style.display = 'none';
-                currentSquare = null;
-            }
         });
     </script>
 </body>
